@@ -1,5 +1,6 @@
 /* Funciones generales (usadas en todas las páginas) */
 function loadSection(section) {
+    console.log('Intentando cargar sección:', section); // Depuración
     const content = document.getElementById('content');
     let url = '';
 
@@ -34,20 +35,21 @@ function loadSection(section) {
         .then(data => {
             content.innerHTML = data;
             updateActiveNav(section);
-            // Guardar la sección activa en localStorage
             localStorage.setItem('activeSection', section);
+            console.log('Sección cargada correctamente:', section); // Depuración
 
             if (section === 'inicio') {
                 initSlider();
             } else if (section === 'contacto') {
                 initMap();
+                initReserveForm();
                 initDirections();
             } else if (section === 'carta') {
                 initCarta();
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error al cargar sección:', error);
             content.innerHTML = `
                 <div class="error-message">
                     <h3>¡Oh no!</h3>
@@ -65,14 +67,18 @@ function updateActiveNav(section) {
     });
 }
 
-// Cargar la sección guardada al iniciar o actualizar la página
+// Cargar "inicio" en la primera carga
 window.onload = function() {
-    const activeSection = localStorage.getItem('activeSection') || 'inicio'; // Por defecto 'inicio' si no hay nada guardado
+    const storedSection = localStorage.getItem('activeSection');
+    console.log('Valor almacenado en localStorage:', storedSection); // Depuración
+    const activeSection = storedSection === null ? 'inicio' : storedSection;
+    console.log('Sección seleccionada para cargar:', activeSection); // Depuración
     loadSection(activeSection);
 };
 
 /* Funciones para index.html (inicio.html) */
 function initSlider() {
+    console.log('Inicializando slider'); // Depuración
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
     const totalSlides = slides.length;
@@ -114,33 +120,104 @@ function initSlider() {
 
 /* Funciones para contacto.html */
 function initMap() {
+    console.log('Inicializando mapa'); // Depuración
     const mapElement = document.getElementById('map');
     if (mapElement && !mapElement.hasAttribute('data-initialized')) {
-        const map = L.map('map').setView([-7.9327781, -79.1006204], 17);
+        const map = L.map('map').setView([-4.586632, -81.266811], 17);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
-        L.marker([-7.9327781, -79.1006204]).addTo(map)
+        L.marker([-4.586632, -81.266811]).addTo(map)
             .bindPopup('Restaurant Soledad')
             .openPopup();
         mapElement.setAttribute('data-initialized', 'true');
     }
 }
 
+function initReserveForm() {
+    console.log('Inicializando formulario de reserva'); // Depuración
+    const form = document.getElementById('reserve-form');
+    const modal = document.getElementById('modal');
+    const modalMessage = document.getElementById('modal-message');
+    const modalBack = document.getElementById('modal-back');
+    const modalConfirm = document.getElementById('modal-confirm');
+
+    if (form && modal && modalMessage && modalBack && modalConfirm) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+            const people = document.getElementById('people').value;
+
+            if (!name) {
+                alert('Por favor, ingresa tu nombre.');
+                return;
+            }
+            if (!date) {
+                alert('Por favor, selecciona una fecha.');
+                return;
+            }
+            if (!time) {
+                alert('Por favor, selecciona una hora.');
+                return;
+            }
+            if (!people || people < 1) {
+                alert('Por favor, ingresa la cantidad de personas (mínimo 1).');
+                return;
+            }
+
+            modalMessage.innerHTML = `
+                Revisa tu reserva:<br>
+                <strong>Nombre:</strong> ${name}<br>
+                <strong>Fecha:</strong> ${date}<br>
+                <strong>Hora:</strong> ${time}<br>
+                <strong>Personas:</strong> ${people}<br><br>
+                Pronto confirmaremos tu solicitud de reserva.
+            `;
+            modal.style.display = 'flex';
+
+            modalBack.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            modalConfirm.onclick = () => {
+                const message = `Nueva reserva:\nNombre: ${name}\nFecha: ${date}\nHora: ${time}\nPersonas: ${people}`;
+                const whatsappUrl = `https://wa.me/51930288404?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                modal.style.display = 'none';
+                form.reset();
+            };
+        });
+    }
+}
+
 function initDirections() {
+    console.log('Inicializando indicaciones'); // Depuración
     const directionsBtn = document.getElementById('directions-btn');
     if (directionsBtn) {
         directionsBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const destination = '-7.9327781,-79.1006204';
+            const destination = '-4.586632,-81.266811';
             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
             window.open(googleMapsUrl, '_blank');
         });
     }
 }
 
+function scrollToReserve() {
+    console.log('Desplazando a sección de reserva'); // Depuración
+    setTimeout(() => {
+        const reserveSection = document.getElementById('reserve-section');
+        if (reserveSection) {
+            reserveSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 100);
+}
+
 /* Funciones para carta.html */
 function initCarta() {
+    console.log('Inicializando carta'); // Depuración
     const categories = document.querySelectorAll('.category');
     const tabButtons = document.querySelectorAll('.tab-btn');
     const detailsButtons = document.querySelectorAll('.details-btn');
